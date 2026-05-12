@@ -450,6 +450,21 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              <div className="pt-4 mt-2 border-t border-border-subtle/30">
+                <a 
+                  href="https://www.aksadogalgaz.com.tr/Musteri-Hizmetleri/Fiyat-Tarifeleri/Satis-Tarifesi" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-3 bg-surface border border-border-subtle rounded-xl group hover:border-accent transition-all"
+                >
+                  <Info className="w-4 h-4 text-accent shrink-0" />
+                  <span className="text-[10px] text-text-secondary font-medium leading-tight group-hover:text-accent transition-colors">
+                    Güncel Kademe 1 ve 2 fiyatları için <b>Aksa Doğalgaz Satış Tarifesi</b>'ne bakılabilir.
+                  </span>
+                  <ArrowUpRight className="w-3 h-3 text-text-secondary/40 ml-auto group-hover:text-accent" />
+                </a>
+              </div>
             </div>
           </SectionCard>
 
