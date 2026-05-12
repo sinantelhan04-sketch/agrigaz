@@ -75,16 +75,16 @@ export default function App() {
   const [sehir, setSehir] = useState('İstanbul');
   const [ilkTarih, setIlkTarih] = useState('2026-04-07');
   const [sonTarih, setSonTarih] = useState('2026-05-10');
-  const [ilkEndeks, setIlkEndeks] = useState(6866);
-  const [sonEndeks, setSonEndeks] = useState(7200);
-  const [duzeltme, setDuzeltme] = useState(0.85651);
-  const [ofid, setOfid] = useState(10.574);
-  const [tuketimSm3, setTuketimSm3] = useState(284.29);
-  const [p1K1Fiyat, setP1K1Fiyat] = useState(1.50085404);
-  const [p1K2Fiyat, setP1K2Fiyat] = useState(2.19399313);
-  const [p2K1Fiyat, setP2K1Fiyat] = useState(1.50085404);
-  const [p2K2Fiyat, setP2K2Fiyat] = useState(2.19399313);
-  const [yuvarlama, setYuvarlama] = useState(-1.44);
+  const [ilkEndeks, setIlkEndeks] = useState(0);
+  const [sonEndeks, setSonEndeks] = useState(0);
+  const [duzeltme, setDuzeltme] = useState(1);
+  const [ofid, setOfid] = useState(10.64);
+  const [tuketimSm3, setTuketimSm3] = useState(0);
+  const [p1K1Fiyat, setP1K1Fiyat] = useState(0);
+  const [p1K2Fiyat, setP1K2Fiyat] = useState(0);
+  const [p2K1Fiyat, setP2K1Fiyat] = useState(0);
+  const [p2K2Fiyat, setP2K2Fiyat] = useState(0);
+  const [yuvarlama, setYuvarlama] = useState(0);
   const [gecikme, setGecikme] = useState(0);
   const [botasPeriod1Limit, setBotasPeriod1Limit] = useState(9.6173); // Nisan default
   const [botasPeriod2Limit, setBotasPeriod2Limit] = useState(4.167);  // Mayıs default
@@ -241,7 +241,7 @@ export default function App() {
             <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center text-accent shadow-sm border border-accent/20">
               <Calculator className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">GassLedger <span className="text-accent">Analitik</span></h1>
+            <h1 className="text-3xl font-extrabold text-text-primary tracking-tight uppercase">FATURA <span className="text-accent">HESAPLAMA</span></h1>
           </div>
         </div>
         <div className="flex items-center gap-6">
@@ -348,7 +348,7 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">OFİD</label>
+                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">Ort. Fiili Üst Is. Değ. Kwh/m3</label>
                   <input 
                     type="number" step="0.001"
                     value={ofid}
