@@ -46,6 +46,8 @@ interface PeriodData {
   enerjiKwh: number;
   tuketimSm3: number; // Consumption in Sm3 for the period
   gunlukOrtalama: number; // Daily average consumption
+  ofid: number;
+  duzeltme: number;
   fiyat: number;
   tutar: number;
   formula: string;
@@ -72,13 +74,13 @@ const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1
 
 export default function App() {
   // --- States ---
-  const [sehir, setSehir] = useState('İstanbul');
-  const [ilkTarih, setIlkTarih] = useState('2026-04-07');
-  const [sonTarih, setSonTarih] = useState('2026-05-10');
+  const [sehir, setSehir] = useState('Ağrı');
+  const [ilkTarih, setIlkTarih] = useState('');
+  const [sonTarih, setSonTarih] = useState('');
   const [ilkEndeks, setIlkEndeks] = useState(0);
   const [sonEndeks, setSonEndeks] = useState(0);
-  const [duzeltme, setDuzeltme] = useState(1);
-  const [ofid, setOfid] = useState(10.64);
+  const [duzeltme, setDuzeltme] = useState(0);
+  const [ofid, setOfid] = useState(0);
   const [tuketimSm3, setTuketimSm3] = useState(0);
   const [p1K1Fiyat, setP1K1Fiyat] = useState(0);
   const [p1K2Fiyat, setP1K2Fiyat] = useState(0);
@@ -144,7 +146,7 @@ export default function App() {
       k2: number
     ): PeriodData => {
       const isK1 = gunlukSm3 <= limit;
-      const energy = (hamTuketim * duzeltme * ofid * days) / okumaGunu;
+      const energy = (tuketimSm3 * ofid * days) / okumaGunu;
       const pTuketimSm3 = (tuketimSm3 * days) / okumaGunu;
       const pGunlukOrtalama = days > 0 ? pTuketimSm3 / days : 0;
       const pToplamLimitSm3 = limit * days;
@@ -162,9 +164,11 @@ export default function App() {
         enerjiKwh: energy,
         tuketimSm3: pTuketimSm3,
         gunlukOrtalama: pGunlukOrtalama,
+        ofid: ofid,
+        duzeltme: duzeltme,
         fiyat: price,
         tutar: amount,
-        formula: `((${sonEndeks}-${ilkEndeks}) × ${duzeltme} × ${days} / ${okumaGunu}) × ${price}`
+        formula: `(${tuketimSm3} × ${days} / ${okumaGunu}) × ${price}`
       };
     };
 
@@ -216,12 +220,6 @@ export default function App() {
       setBotasPeriod2Limit(Number((monthly2 / days2).toFixed(4)));
     }
   }, [sehir, ilkTarih, sonTarih]);
-
-  // Sync Total Consumption (Sm3) when indices or K factor changes
-  useEffect(() => {
-    const calculatedSm3 = Math.max(0, (sonEndeks - ilkEndeks) * duzeltme);
-    setTuketimSm3(Number(calculatedSm3.toFixed(2)));
-  }, [ilkEndeks, sonEndeks, duzeltme]);
 
   // Auto-calculate results whenever any parameter changes
   useEffect(() => {
@@ -718,11 +716,13 @@ function PeriodCard({ period, index }: { period: PeriodData, index: number }) {
 
       <div className="h-px bg-border-subtle/50 mb-8" />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-12">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-12">
         <MiniStat label="Süre" value={`${period.gunSayisi}`} unit="Gün" />
-        <MiniStat label="Sm³ Tüketim" value={`${fmt(period.tuketimSm3, 2)}`} unit="Sm³" />
-        <MiniStat label="BOTAŞ Limit" value={`${fmt(period.toplamLimitSm3, 2)}`} unit="Sm³" />
+        <MiniStat label="Abone Sm³ Tüketimi" value={`${fmt(period.tuketimSm3, 2)}`} unit="Sm³" />
+        <MiniStat label={`BOTAŞ ${period.ayAdi} Ayı Tüketim Limiti`} value={`${fmt(period.toplamLimitSm3, 2)}`} unit="Sm³" />
         <MiniStat label="Günlük Ort." value={`${fmt(period.gunlukOrtalama, 2)}`} unit="Sm³" />
+        <MiniStat label="OFİD" value={`${fmt(period.ofid, 3)}`} unit="kWh/m³" />
+        <MiniStat label="K Katsayısı" value={`${fmt(period.duzeltme, 5)}`} />
       </div>
 
       <div className="mt-8 grid grid-cols-2 gap-4">
