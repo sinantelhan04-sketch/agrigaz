@@ -53,35 +53,37 @@ async function startServer() {
       source: "Manual/Fallback"
     };
 
-    // Slugification map for cities
+    // Slugification map for cities (using base names)
     const citySlugs: Record<string, string> = {
-      "Aksa Doğalgaz Afyon": "Afyon",
-      "Aksa Doğalgaz Ağrı": "Agri",
-      "Aksa Doğalgaz Balıkesir": "Balikesir",
-      "Aksa Doğalgaz Bandırma": "Bandirma",
-      "Aksa Doğalgaz Bilecik-Bolu": "BilecikBolu",
-      "Aksa Doğalgaz Bursa": "Bursa",
-      "Aksa Doğalgaz Çanakkale": "Canakkale",
-      "Aksa Doğalgaz Çukurova": "Cukurova",
-      "Aksa Doğalgaz Düzce Ereğli": "DuzceEregli",
-      "Aksa Doğalgaz Elazığ": "Elazig",
-      "Aksa Doğalgaz Gemlik": "Gemlik",
-      "Aksa Doğalgaz Gümüşhane Bayburt": "GumushaneBayburt",
-      "Aksa Doğalgaz Kayseri": "Kayseri",
-      "Aksa Doğalgaz Malatya": "Malatya",
-      "Aksa Doğalgaz Manisa": "Manisa",
-      "Aksa Doğalgaz Mustafakemalpaşa Susurluk Karacabey": "MustafakemalpasaSusurlukKaracabey",
-      "Aksa Doğalgaz Ordu Giresun": "OrduGiresun",
-      "Aksa Doğalgaz Siirt Batman": "SiirtBatman",
-      "Aksa Doğalgaz Sivas": "Sivas",
-      "Aksa Doğalgaz Şanlıurfa": "Sanliurfa",
-      "Aksa Doğalgaz Sakarya": "Sakarya",
-      "Aksa Doğalgaz Tokat Amasya": "TokatAmasya",
-      "Aksa Doğalgaz Trabzon Rize": "TrabzonRize",
-      "Aksa Doğalgaz Van": "Van"
+      "Afyon": "Afyon",
+      "Ağrı": "Agri",
+      "Balıkesir": "Balikesir",
+      "Bandırma": "Bandirma",
+      "Bilecik-Bolu": "BilecikBolu",
+      "Bursa": "Bursa",
+      "Çanakkale": "Canakkale",
+      "Çukurova": "Cukurova",
+      "Düzce Ereğli": "DuzceEregli",
+      "Elazığ": "Elazig",
+      "Gemlik": "Gemlik",
+      "Gümüşhane Bayburt": "GumushaneBayburt",
+      "Kayseri": "Kayseri",
+      "Malatya": "Malatya",
+      "Manisa": "Manisa",
+      "Mustafakemalpaşa Susurluk Karacabey": "MustafakemalpasaSusurlukKaracabey",
+      "Ordu Giresun": "OrduGiresun",
+      "Siirt Batman": "SiirtBatman",
+      "Sivas": "Sivas",
+      "Şanlıurfa": "Sanliurfa",
+      "Sakarya": "Sakarya",
+      "Tokat Amasya": "TokatAmasya",
+      "Trabzon Rize": "TrabzonRize",
+      "Van": "Van"
     };
 
-    const citySlug = citySlugs[city as string] || city;
+    // Strip "Aksa Doğalgaz" from the beginning if it exists
+    const normalizedCity = (city as string).replace(/^Aksa Doğalgaz\s+/i, '').trim();
+    const citySlug = citySlugs[normalizedCity] || normalizedCity;
     const formattedMonth = month ? month.toString().padStart(2, '0') : '';
     const yearMonth = `${year}${formattedMonth}`;
     const baseUrl = "https://www.aksadogalgaz.com.tr/Musteri-Hizmetleri/Fiyat-Tarifeleri/Satis-Tarifesi/";
