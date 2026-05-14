@@ -74,7 +74,8 @@ const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1
 
 export default function App() {
   // --- States ---
-  const [sehir, setSehir] = useState('Ağrı');
+  const [sehir, setSehir] = useState('Aksa Doğalgaz Ağrı');
+  const [regions, setRegions] = useState<string[]>([]);
   const [ilkTarih, setIlkTarih] = useState('');
   const [sonTarih, setSonTarih] = useState('');
   const [ilkEndeks, setIlkEndeks] = useState(0);
@@ -92,10 +93,57 @@ export default function App() {
   const [botasPeriod1Limit, setBotasPeriod1Limit] = useState(9.6173); // Nisan default
   const [botasPeriod2Limit, setBotasPeriod2Limit] = useState(4.167);  // Mayıs default
 
+  const [loadingP1, setLoadingP1] = useState(false);
+  const [loadingP2, setLoadingP2] = useState(false);
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // --- Logic ---
+  const fetchPricesForPeriod = async (dateStr: string, setK1: (v: number) => void, setK2: (v: number) => void, setLoading: (v: boolean) => void) => {
+    if (!dateStr || !sehir) return;
+    setLoading(true);
+    try {
+      const date = new Date(dateStr);
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      const response = await fetch(`/api/prices?city=${encodeURIComponent(sehir)}&month=${month}&year=${year}`);
+      const data = await response.json();
+      
+      if (data.k1) setK1(data.k1);
+      if (data.k2) setK2(data.k2);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPrices = async () => {
+    await Promise.all([
+      fetchPricesForPeriod(ilkTarih, setP1K1Fiyat, setP1K2Fiyat, setLoadingP1),
+      fetchPricesForPeriod(sonTarih, setP2K1Fiyat, setP2K2Fiyat, setLoadingP2)
+    ]);
+  };
+
+  useEffect(() => {
+    fetch("/api/regions")
+      .then(res => res.json())
+      .then(data => setRegions(data))
+      .catch(err => console.error("Regions fetch error:", err));
+  }, []);
+
+  useEffect(() => {
+    if (ilkTarih) {
+      fetchPricesForPeriod(ilkTarih, setP1K1Fiyat, setP1K2Fiyat, setLoadingP1);
+    }
+  }, [ilkTarih, sehir]);
+
+  useEffect(() => {
+    if (sonTarih) {
+      fetchPricesForPeriod(sonTarih, setP2K1Fiyat, setP2K2Fiyat, setLoadingP2);
+    }
+  }, [sonTarih, sehir]);
+
   const calculate = () => {
     setError(null);
 
@@ -285,9 +333,11 @@ export default function App() {
                     onChange={(e) => setSehir(e.target.value)}
                     className="w-full h-11 px-4 bg-bg border border-border-subtle rounded-xl text-sm text-text-primary focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all appearance-none cursor-pointer"
                   >
-                    {CITIES.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
+                    {regions.length > 0 ? (
+                      regions.map(c => <option key={c} value={c}>{c}</option>)
+                    ) : (
+                      CITIES.map(c => <option key={c} value={c}>{c}</option>)
+                    )}
                   </select>
                   <ChevronDown className="w-4 h-4 text-text-secondary absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -366,11 +416,21 @@ export default function App() {
               </div>
 
               <div className="pt-2 border-t border-border-subtle/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                  <span className="text-[9px] font-black text-text-secondary uppercase tracking-[0.2em]">
-                    ({ilkTarih ? getAyAdi(new Date(ilkTarih)) : '...'}) FİYATLARI
-                  </span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                    <span className="text-[9px] font-black text-text-secondary uppercase tracking-[0.2em]">
+                      ({ilkTarih ? getAyAdi(new Date(ilkTarih)) : '...'}) FİYATLARI
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => fetchPricesForPeriod(ilkTarih, setP1K1Fiyat, setP1K2Fiyat, setLoadingP1)}
+                    disabled={loadingP1}
+                    className="flex items-center gap-1.5 px-2 py-1 bg-accent/10 border border-accent/20 rounded-lg text-accent text-[9px] font-bold uppercase transition-all hover:bg-accent hover:text-white disabled:opacity-50"
+                  >
+                    <Search className={`w-3 h-3 ${loadingP1 ? 'animate-spin' : ''}`} />
+                    {loadingP1 ? 'Çekiliyor...' : 'Fiyatları Getir'}
+                  </button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -395,11 +455,21 @@ export default function App() {
               </div>
 
               <div className="pt-2 border-t border-border-subtle/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                  <span className="text-[9px] font-black text-text-secondary uppercase tracking-[0.2em]">
-                    ({sonTarih ? getAyAdi(new Date(sonTarih)) : '...'}) FİYATLARI
-                  </span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                    <span className="text-[9px] font-black text-text-secondary uppercase tracking-[0.2em]">
+                      ({sonTarih ? getAyAdi(new Date(sonTarih)) : '...'}) FİYATLARI
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => fetchPricesForPeriod(sonTarih, setP2K1Fiyat, setP2K2Fiyat, setLoadingP2)}
+                    disabled={loadingP2}
+                    className="flex items-center gap-1.5 px-2 py-1 bg-accent/10 border border-accent/20 rounded-lg text-accent text-[9px] font-bold uppercase transition-all hover:bg-accent hover:text-white disabled:opacity-50"
+                  >
+                    <Search className={`w-3 h-3 ${loadingP2 ? 'animate-spin' : ''}`} />
+                    {loadingP2 ? 'Çekiliyor...' : 'Fiyatları Getir'}
+                  </button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
