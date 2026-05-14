@@ -3,16 +3,17 @@ import path from "path";
 import cors from "cors";
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { createServer as createViteServer } from "vite";
 
 export const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+app.get("/api/health", (req, res) => res.json({ status: "ok", vercel: !!process.env.VERCEL }));
+
 // API Route for regions
 app.get("/api/regions", (req, res) => {
-    const regions = [
+  const regions = [
       "Aksa Doğalgaz Afyon",
       "Aksa Doğalgaz Ağrı",
       "Aksa Doğalgaz Balıkesir",
@@ -44,6 +45,7 @@ app.get("/api/regions", (req, res) => {
   // API Route for fetching prices
   app.get("/api/prices", async (req, res) => {
     const { city, month, year } = req.query;
+    console.log(`Processing price request for ${city}, ${month}/${year}`);
     
     const fallbackPrices = {
       k1: 6.5126,
@@ -151,6 +153,7 @@ app.get("/api/regions", (req, res) => {
 async function startServer() {
   const PORT = 3000;
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
