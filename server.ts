@@ -5,15 +5,13 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { createServer as createViteServer } from "vite";
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+export const app = express();
 
-  app.use(cors());
-  app.use(express.json());
+app.use(cors());
+app.use(express.json());
 
-  // API Route for regions
-  app.get("/api/regions", (req, res) => {
+// API Route for regions
+app.get("/api/regions", (req, res) => {
     const regions = [
       "Aksa Doğalgaz Afyon",
       "Aksa Doğalgaz Ağrı",
@@ -148,9 +146,10 @@ async function startServer() {
         source: "GassLedger System"
       });
     }
-  });
+});
 
-  // Vite middleware for development
+async function startServer() {
+  const PORT = 3000;
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -170,4 +169,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
