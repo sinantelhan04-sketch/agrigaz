@@ -117,7 +117,10 @@ export default function App() {
       return;
     }
 
+    const computedOfid = kcal > 0 ? kcal / 860.42 : 0;
     const computedTuketimSm3 = ((sonEndeks - ilkEndeks) * duzeltme * kcal) / 9155;
+    
+    setOfid(Number(computedOfid.toFixed(4)));
     setTuketimSm3(Number(computedTuketimSm3.toFixed(2)));
 
     const hamTuketim = sonEndeks - ilkEndeks;
@@ -150,7 +153,7 @@ export default function App() {
       k2: number
     ): PeriodData => {
       const isK1 = gunlukSm3 <= limit;
-      const energy = (computedTuketimSm3 * ofid * days) / okumaGunu;
+      const energy = (computedTuketimSm3 * computedOfid * days) / okumaGunu;
       const pTuketimSm3 = (computedTuketimSm3 * days) / okumaGunu;
       const pGunlukOrtalama = days > 0 ? pTuketimSm3 / days : 0;
       const pToplamLimitSm3 = limit * days;
@@ -168,7 +171,7 @@ export default function App() {
         enerjiKwh: energy,
         tuketimSm3: pTuketimSm3,
         gunlukOrtalama: pGunlukOrtalama,
-        ofid: ofid,
+        ofid: computedOfid,
         duzeltme: duzeltme,
         fiyat: price,
         tutar: amount,
@@ -230,7 +233,7 @@ export default function App() {
     calculate();
   }, [
     sehir, ilkTarih, sonTarih, ilkEndeks, sonEndeks, 
-    duzeltme, ofid, kcal, tuketimSm3, 
+    duzeltme, kcal, 
     p1K1Fiyat, p1K2Fiyat, p2K1Fiyat, p2K2Fiyat, 
     yuvarlama, gecikme, botasPeriod1Limit, botasPeriod2Limit
   ]);
@@ -352,13 +355,10 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">Ort. Fiili Üst Is. Değ. Kwh/m3</label>
-                  <input 
-                    type="number" step="0.001"
-                    value={ofid}
-                    onChange={(e) => setOfid(Number(e.target.value))}
-                    className="w-full h-11 px-4 bg-bg border border-border-subtle rounded-xl text-sm text-text-primary outline-none focus:border-accent transition-all"
-                  />
+                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">Üst Isıl Değer (kWh/m³)</label>
+                  <div className="w-full h-11 px-4 bg-bg border border-border-subtle rounded-xl text-sm text-text-primary flex items-center font-mono bg-accent/5 border-accent/20">
+                    {fmt(ofid, 4)}
+                  </div>
                 </div>
               </div>
               <div>
@@ -564,9 +564,10 @@ export default function App() {
                   className="space-y-8"
                 >
                   {/* Summary Stats Row */}
-                  <div className="grid grid-cols-3 gap-6">
-                    <ResultStat label="Ham Tüketim" value={`${fmt(results.hamTuketim, 0)} m³`} />
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <ResultStat label="Toplam Tüketim" value={`${fmt(tuketimSm3, 2)} Sm³`} mono />
                     <ResultStat label="Okuma Günü" value={`${results.okumaGunu} Gün`} />
+                    <ResultStat label="Endeks Farkı" value={`${fmt(results.hamTuketim, 0)} m³`} />
                     <ResultStat label="Günlük Oran" value={fmt(results.gunlukSm3, 4)} mono />
                   </div>
 
