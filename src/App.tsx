@@ -233,7 +233,7 @@ export default function App() {
     calculate();
   }, [
     sehir, ilkTarih, sonTarih, ilkEndeks, sonEndeks, 
-    duzeltme, kcal, 
+    duzeltme, ofid, kcal, tuketimSm3, 
     p1K1Fiyat, p1K2Fiyat, p2K1Fiyat, p2K2Fiyat, 
     yuvarlama, gecikme, botasPeriod1Limit, botasPeriod2Limit
   ]);
@@ -355,37 +355,26 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">Üst Isıl Değer (kWh/m³)</label>
-                  <div className="w-full h-11 px-4 bg-bg border border-border-subtle rounded-xl text-sm text-text-primary flex items-center font-mono bg-accent/5 border-accent/20">
-                    {fmt(ofid, 4)}
-                  </div>
+                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">Ort. Fiili Üst Is. Değ. Kcal/m3</label>
+                  <input 
+                    type="number" step="0.01"
+                    value={kcal}
+                    onChange={(e) => setKcal(Number(e.target.value))}
+                    className="w-full h-11 px-4 bg-bg border border-border-subtle rounded-xl text-sm text-text-primary outline-none focus:border-accent transition-all"
+                  />
                 </div>
               </div>
-              <div>
-                <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">Ort. Fiili Üst Is. Değ. Kcal/m3</label>
-                <input 
-                  type="number" step="0.01"
-                  value={kcal}
-                  onChange={(e) => setKcal(Number(e.target.value))}
-                  className="w-full h-11 px-4 bg-bg border border-border-subtle rounded-xl text-sm text-text-primary outline-none focus:border-accent transition-all"
-                />
-              </div>
-              <div className="p-4 bg-accent/5 rounded-2xl border border-accent/20">
-                <label className="text-[9px] font-black text-accent uppercase tracking-[0.2em] mb-1 block">Hesaplanan Toplam Tüketim</label>
-                <div className="text-xl font-mono font-bold text-text-primary">
-                  {fmt(tuketimSm3, 2)} <span className="text-xs text-text-secondary">Sm³</span>
-                </div>
-              </div>
+
               <div className="pt-2 border-t border-border-subtle/50">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                   <span className="text-[9px] font-black text-text-secondary uppercase tracking-[0.2em]">
-                    01. DÖNEM ({ilkTarih ? getAyAdi(new Date(ilkTarih)) : '...'}) FİYATLARI
+                    ({ilkTarih ? getAyAdi(new Date(ilkTarih)) : '...'}) FİYATLARI
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">1. Dönem K1 Fiyatı</label>
+                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">K1 Fiyatı</label>
                     <input 
                       type="number" step="0.00000001"
                       value={p1K1Fiyat}
@@ -394,7 +383,7 @@ export default function App() {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">1. Dönem K2 Fiyatı</label>
+                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">K2 Fiyatı</label>
                     <input 
                       type="number" step="0.00000001"
                       value={p1K2Fiyat}
@@ -409,12 +398,12 @@ export default function App() {
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                   <span className="text-[9px] font-black text-text-secondary uppercase tracking-[0.2em]">
-                    02. DÖNEM ({sonTarih ? getAyAdi(new Date(sonTarih)) : '...'}) FİYATLARI
+                    ({sonTarih ? getAyAdi(new Date(sonTarih)) : '...'}) FİYATLARI
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">2. Dönem K1 Fiyatı</label>
+                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">K1 Fiyatı</label>
                     <input 
                       type="number" step="0.00000001"
                       value={p2K1Fiyat}
@@ -423,7 +412,7 @@ export default function App() {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">2. Dönem K2 Fiyatı</label>
+                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">K2 Fiyatı</label>
                     <input 
                       type="number" step="0.00000001"
                       value={p2K2Fiyat}
@@ -478,11 +467,13 @@ export default function App() {
             </div>
           </SectionCard>
 
-          <SectionCard title="BOTAŞ Limitleri" icon={<ArrowUpRight className="w-4 h-4" />}>
+          <SectionCard title={`BOTAŞ LİMİTLERİ (${sehir})`} icon={<ArrowUpRight className="w-4 h-4" />}>
             <div className="space-y-4">
               <div className="grid gap-3">
                 <div className="flex items-center justify-between py-2 border-b border-border-subtle/50">
-                  <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">P1 Günlük Limit</span>
+                  <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">
+                    {ilkTarih ? getAyAdi(new Date(ilkTarih)) : '1. Ay'} Günlük Limit
+                  </span>
                   <div className="flex items-center gap-2">
                     <input 
                       type="number" step="0.0001"
@@ -494,7 +485,9 @@ export default function App() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">P2 Günlük Limit</span>
+                  <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">
+                    {sonTarih ? getAyAdi(new Date(sonTarih)) : '2. Ay'} Günlük Limit
+                  </span>
                   <div className="flex items-center gap-2">
                     <input 
                       type="number" step="0.0001"
@@ -564,11 +557,12 @@ export default function App() {
                   className="space-y-8"
                 >
                   {/* Summary Stats Row */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     <ResultStat label="Toplam Tüketim" value={`${fmt(tuketimSm3, 2)} Sm³`} mono />
                     <ResultStat label="Okuma Günü" value={`${results.okumaGunu} Gün`} />
                     <ResultStat label="Endeks Farkı" value={`${fmt(results.hamTuketim, 0)} m³`} />
                     <ResultStat label="Günlük Oran" value={fmt(results.gunlukSm3, 4)} mono />
+                    <ResultStat label="OFWID" value={fmt(ofid, 4)} mono />
                   </div>
 
                   {/* Period Cards */}
