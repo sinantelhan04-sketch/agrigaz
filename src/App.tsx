@@ -81,6 +81,7 @@ export default function App() {
   const [sonEndeks, setSonEndeks] = useState(0);
   const [duzeltme, setDuzeltme] = useState(0);
   const [ofid, setOfid] = useState(0);
+  const [kcal, setKcal] = useState(0);
   const [tuketimSm3, setTuketimSm3] = useState(0);
   const [p1K1Fiyat, setP1K1Fiyat] = useState(0);
   const [p1K2Fiyat, setP1K2Fiyat] = useState(0);
@@ -116,9 +117,12 @@ export default function App() {
       return;
     }
 
+    const computedTuketimSm3 = ((sonEndeks - ilkEndeks) * duzeltme * kcal) / 9155;
+    setTuketimSm3(Number(computedTuketimSm3.toFixed(2)));
+
     const hamTuketim = sonEndeks - ilkEndeks;
     const okumaGunu = tarihFark(ilkTarih, sonTarih) + 1;
-    const gunlukSm3 = tuketimSm3 / okumaGunu;
+    const gunlukSm3 = computedTuketimSm3 / okumaGunu;
 
     const ilkYil = ilkD.getFullYear();
     const ilkAyIndex = ilkD.getMonth();
@@ -146,8 +150,8 @@ export default function App() {
       k2: number
     ): PeriodData => {
       const isK1 = gunlukSm3 <= limit;
-      const energy = (tuketimSm3 * ofid * days) / okumaGunu;
-      const pTuketimSm3 = (tuketimSm3 * days) / okumaGunu;
+      const energy = (computedTuketimSm3 * ofid * days) / okumaGunu;
+      const pTuketimSm3 = (computedTuketimSm3 * days) / okumaGunu;
       const pGunlukOrtalama = days > 0 ? pTuketimSm3 / days : 0;
       const pToplamLimitSm3 = limit * days;
       const price = isK1 ? k1 : k2;
@@ -168,7 +172,7 @@ export default function App() {
         duzeltme: duzeltme,
         fiyat: price,
         tutar: amount,
-        formula: `(${tuketimSm3} × ${days} / ${okumaGunu}) × ${price}`
+        formula: `(${computedTuketimSm3.toFixed(2)} × ${days} / ${okumaGunu}) × ${price}`
       };
     };
 
@@ -226,7 +230,7 @@ export default function App() {
     calculate();
   }, [
     sehir, ilkTarih, sonTarih, ilkEndeks, sonEndeks, 
-    duzeltme, ofid, tuketimSm3, 
+    duzeltme, ofid, kcal, tuketimSm3, 
     p1K1Fiyat, p1K2Fiyat, p2K1Fiyat, p2K2Fiyat, 
     yuvarlama, gecikme, botasPeriod1Limit, botasPeriod2Limit
   ]);
@@ -245,7 +249,9 @@ export default function App() {
         <div className="flex items-center gap-6">
           <div className="text-right hidden sm:block">
             <p className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Fatura Dönemi</p>
-            <p className="text-sm font-bold text-text-primary">{new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</p>
+            <p className="text-sm font-bold text-text-primary">
+              {sonTarih ? new Date(sonTarih).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) : '-'}
+            </p>
           </div>
           <div className="flex gap-2">
             <button className="p-2.5 bg-surface border border-border-subtle rounded-xl text-text-secondary hover:text-accent hover:border-accent transition-all shadow-sm">
@@ -356,13 +362,19 @@ export default function App() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">Toplam Tüketim (Sm³)</label>
+                <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 block">Ort. Fiili Üst Is. Değ. Kcal/m3</label>
                 <input 
                   type="number" step="0.01"
-                  value={tuketimSm3}
-                  onChange={(e) => setTuketimSm3(Number(e.target.value))}
-                  className="w-full h-11 px-4 bg-bg border border-border-subtle rounded-xl text-sm text-text-primary outline-none focus:border-accent transition-all font-mono"
+                  value={kcal}
+                  onChange={(e) => setKcal(Number(e.target.value))}
+                  className="w-full h-11 px-4 bg-bg border border-border-subtle rounded-xl text-sm text-text-primary outline-none focus:border-accent transition-all"
                 />
+              </div>
+              <div className="p-4 bg-accent/5 rounded-2xl border border-accent/20">
+                <label className="text-[9px] font-black text-accent uppercase tracking-[0.2em] mb-1 block">Hesaplanan Toplam Tüketim</label>
+                <div className="text-xl font-mono font-bold text-text-primary">
+                  {fmt(tuketimSm3, 2)} <span className="text-xs text-text-secondary">Sm³</span>
+                </div>
               </div>
               <div className="pt-2 border-t border-border-subtle/50">
                 <div className="flex items-center gap-2 mb-3">
