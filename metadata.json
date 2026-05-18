@@ -1,6 +1,8 @@
 {
   "name": "Doğalgaz Fatura Hesaplayıcı",
-  "description": "Dönem bazlı kademe analizi ve BOTAŞ günlük limitlerine göre doğalgaz fatura hesaplama aracı.",
+  "description": "Dönem bazlı kademe analizi ve BOTAŞ günlük limitlerine göre doğalgaz fatura hesaplama ve Excel raporlama aracı.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

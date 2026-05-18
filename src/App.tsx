@@ -17,9 +17,11 @@ import {
   TrendingDown,
   TrendingUp,
   Download,
-  Search
+  Search,
+  FileSpreadsheet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import * as XLSX from 'xlsx';
 import { CITY_MONTHLY_DATA, CITIES } from './constants';
 
 // --- Types ---
@@ -43,10 +45,13 @@ interface PeriodData {
   isK1: boolean;
   limitSm3: number; // Daily limit
   toplamLimitSm3: number; // Total limit for the period duration
+  hacimM3: number;
+  duzeltilmisTuketimM3: number;
   enerjiKwh: number;
   tuketimSm3: number; // Consumption in Sm3 for the period
   gunlukOrtalama: number; // Daily average consumption
   ofid: number;
+  kcal: number;
   duzeltme: number;
   fiyat: number;
   tutar: number;
@@ -209,6 +214,8 @@ export default function App() {
       const isK1 = gunlukSm3 <= limit;
       
       // The fundamental calculation requested: ((Indices Difference * K) * OFID / Total Days) * Period Days
+      const pHacimM3 = (hamTuketimRaw * days) / okumaGunu;
+      const pDuzeltilmisTuketimM3 = (pHacimM3 * duzeltme);
       const pTuketimSm3 = (computedTuketimSm3 * days) / okumaGunu;
       const energy = (totalEnergykWh * days) / okumaGunu;
       
@@ -225,10 +232,13 @@ export default function App() {
         isK1,
         limitSm3: limit,
         toplamLimitSm3: pToplamLimitSm3,
+        hacimM3: pHacimM3,
+        duzeltilmisTuketimM3: pDuzeltilmisTuketimM3,
         enerjiKwh: energy,
         tuketimSm3: pTuketimSm3,
         gunlukOrtalama: pGunlukOrtalama,
         ofid: computedOfid,
+        kcal: kcal,
         duzeltme: duzeltme,
         fiyat: price,
         tutar: amount,
@@ -776,62 +786,100 @@ function SummaryRow({ label, value, isNeg }: { label: string, value: string, isN
 
 function PeriodCard({ period, index }: { period: PeriodData, index: number }) {
   const isK1 = period.isK1;
-  const accentColor = isK1 ? 'border-pos' : 'border-neg';
-  const badgeColor = isK1 ? 'bg-pos/10 text-pos border-pos/20' : 'bg-neg/10 text-neg border-neg/20';
+  const badgeColor = isK1 ? 'bg-[#f0f9ff] text-[#0369a1] border-[#0369a1]' : 'bg-[#fff5f5] text-[#e03131] border-[#e03131]';
+
+  const exportToExcel = () => {
+    const data = [
+      ["Açıklama", "Değer", "Birim"],
+      ["OKUMA DÖNEMİ", `${period.baslangic} – ${period.bitis}`, ""],
+      ["KADEME DURUMU", isK1 ? 'KADEME 1 (LİMİT ALTI)' : 'KADEME 2 (LİMİT ÜSTÜ)', ""],
+      ["SAYAÇTAN ÖLÇÜLEN HACİM", period.hacimM3, "M3"],
+      ["DÜZETME KATSAYISI (K)", period.duzeltme, ""],
+      ["DÜZELTİLMİŞ TÜKETİM", period.duzeltilmisTuketimM3, "M3"],
+      ["ORT. FİİLİ ÜST IS. DEĞ.", period.kcal, "KCAL/M3"],
+      ["ORT. FİİLİ ÜST IS. DEĞ. (OFİD)", period.ofid, "KWH/M3"],
+      ["TÜKETİM MİKTARI", period.tuketimSm3, "SM3"],
+      ["BOTAŞ TÜKETİM LİMİTİ", period.toplamLimitSm3, `SM3 (${period.gunSayisi} GÜN)`],
+      ["TÜKETİM ENERJİ MİKTARI", period.enerjiKwh, "KWH"],
+      [`BİRİM SATIŞ FIYATI (${isK1 ? 'K1' : 'K2'})`, period.fiyat, "TL/KWH"],
+      ["DÖNEM TÜKETİM BEDELİ", period.tutar, "TL"],
+      ["", "", ""],
+      ["HESAPLAMA FORMÜLÜ", period.formula, ""]
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `Donem_${index}`);
+    XLSX.writeFile(wb, `GassLedger_Donem_${index}_${period.ayAdi}.xlsx`);
+  };
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: -15 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
-      className={`relative overflow-hidden bg-white border border-border-subtle border-l-8 ${accentColor} p-8 rounded-[2rem] shadow-lg shadow-black/[0.02]`}
+      className="relative bg-white border border-[#edf2f7] rounded-3xl overflow-hidden shadow-sm"
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+      {/* Red vertical bar as seen in the image */}
+      <div className="absolute right-0 top-0 bottom-0 w-1 bg-[#e03131]" />
+
+      <div className="p-8 pb-4 flex items-center justify-between border-b border-[#f7fafc]">
         <div>
-          <h4 className="text-[11px] font-extrabold text-text-secondary uppercase tracking-[0.2em]">Dönem 0{index}: {period.ayAdi}</h4>
-          <p className="text-xs text-text-secondary/60 font-semibold mt-1">{period.baslangic} – {period.bitis}</p>
+          <h4 className="text-[15px] font-black text-[#4a5568] uppercase tracking-[0.05em]">
+            DÖNEM 0{index}: {period.ayAdi}
+          </h4>
+          <p className="text-[13px] text-[#a0aec0] font-bold mt-1 tracking-wide">
+            {period.baslangic} – {period.bitis}
+          </p>
         </div>
-        <div className={`px-3 py-1.5 border rounded-full text-[10px] font-black uppercase tracking-widest ${badgeColor}`}>
-          {isK1 ? 'Kademe 1 Aktif' : 'Kademe 2 Aktif'}
-        </div>
-      </div>
-
-      <div className="text-4xl font-extrabold text-text-primary mb-8 tracking-tight">
-        {fmt(period.tutar, 2)} <span className="text-lg font-bold text-text-secondary lowercase">tl</span>
-      </div>
-
-      <div className="h-px bg-border-subtle/50 mb-8" />
-
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-12">
-        <MiniStat label="Süre" value={`${period.gunSayisi}`} unit="Gün" />
-        <MiniStat label="Abone Sm³ Tüketimi" value={`${fmt(period.tuketimSm3, 2)}`} unit="Sm³" />
-        <MiniStat label={`BOTAŞ ${period.ayAdi} Ayı Tüketim Limiti`} value={`${fmt(period.toplamLimitSm3, 2)}`} unit="Sm³" />
-        <MiniStat label="Günlük Ort." value={`${fmt(period.gunlukOrtalama, 2)}`} unit="Sm³" />
-        <MiniStat label="OFİD" value={`${fmt(period.ofid, 3)}`} unit="kWh/m³" />
-        <MiniStat label="K Katsayısı" value={`${fmt(period.duzeltme, 5)}`} />
-      </div>
-
-      <div className="mt-8 grid grid-cols-2 gap-4">
-        <div className="p-3 bg-bg rounded-xl border border-border-subtle/50">
-          <span className="text-[9px] font-bold text-text-secondary uppercase tracking-widest block mb-1">Enerji</span>
-          <span className="text-sm font-mono font-bold text-text-primary">{fmt(period.enerjiKwh, 1)} <span className="text-[9px] text-text-secondary uppercase">kWh</span></span>
-        </div>
-        <div className="p-3 bg-bg rounded-xl border border-border-subtle/50">
-          <span className="text-[9px] font-bold text-text-secondary uppercase tracking-widest block mb-1">Birim Fiyat</span>
-          <span className="text-sm font-mono font-bold text-text-primary">{fmt(period.fiyat, 8)} <span className="text-[9px] text-text-secondary uppercase">TL</span></span>
+        <div className={`px-4 py-2 border rounded-full text-[11px] font-black uppercase tracking-widest ${badgeColor}`}>
+          {isK1 ? 'KADEME 1 (BOTAŞ LİMİT ALTI)' : 'KADEME 2 (BOTAŞ LİMİT ÜSTÜ)'}
         </div>
       </div>
 
-      <div className="mt-10">
-        <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-4 flex items-center gap-2">
-          <Info className="w-3.5 h-3.5" />
-          Hesaplama Mantığı
-        </p>
-        <div className="bg-bg rounded-2xl p-4 font-mono text-[11px] text-text-secondary font-medium leading-relaxed border border-border-subtle/50 shadow-inner">
+      <div className="divide-y divide-[#f7fafc]">
+        <DetailRow label="SAYAÇTAN ÖLÇÜLEN HACİM (M3)" value={fmt(period.hacimM3)} />
+        <DetailRow label="DÜZETME KATSAYISI (K)" value={fmt(period.duzeltme, 5)} />
+        <DetailRow label="DÜZELTİLMİŞ TÜKETİM (M3)" value={fmt(period.duzeltilmisTuketimM3)} />
+        <DetailRow label="ORT. FİİLİ ÜST IS. DEĞ. KCAL/M3" value={fmt(period.kcal, 3)} />
+        <DetailRow label="ORT. FİİLİ ÜST IS. DEĞ. KWH/M3 (OFİD)" value={fmt(period.ofid, 4)} />
+        <DetailRow label="TÜKETİM MİKTARI (SM3)" value={fmt(period.tuketimSm3)} />
+        <DetailRow label={`BOTAŞ TÜKETİM LİMİTİ (SM3) (${period.gunSayisi} GÜN)`} value={fmt(period.toplamLimitSm3)} />
+        <DetailRow label="TÜKETİM ENERJİ MİKTARI (KWH)" value={fmt(period.enerjiKwh)} />
+        <DetailRow label={`ORT. PER. SATIŞ FIY. (TL/KWH) / ${isK1 ? 'K1' : 'K2'}`} value={fmt(period.fiyat, 8)} />
+        <DetailRow label="DÖNEM TÜKETİM BEDELİ (TL)" value={`₺${fmt(period.tutar)}`} isTotal />
+      </div>
+
+      <div className="p-8 bg-[#f8fafc]/50">
+        <div className="flex items-center gap-2 mb-4 text-[#718096] uppercase tracking-[0.1em] text-[11px] font-black">
+          <Info className="w-4 h-4" />
+          HESAPLAMA FORMÜLÜ
+        </div>
+        <div className="bg-white border border-[#edf2f7] rounded-2xl p-5 text-[14px] text-[#718096] font-bold text-center shadow-inner">
           {period.formula}
         </div>
+        <button 
+          onClick={exportToExcel}
+          className="mt-6 w-full py-4 bg-[#f0fdf4] border border-[#dcfce7] text-[#166534] rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#dcfce7] transition-all shadow-sm"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          EXCEL DOSYASI OLARAK İNDİR
+        </button>
       </div>
     </motion.div>
+  );
+}
+
+function DetailRow({ label, value, isTotal }: { label: string, value: string, isTotal?: boolean }) {
+  return (
+    <div className={`flex items-center justify-between p-4 px-8 ${isTotal ? 'bg-slate-50' : ''}`}>
+      <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider">
+        {label}
+      </span>
+      <span className={`text-[15px] font-extrabold text-[#1e293b] ${isTotal ? 'text-xl' : ''}`}>
+        {value}
+      </span>
+    </div>
   );
 }
 
