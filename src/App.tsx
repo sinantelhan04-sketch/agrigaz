@@ -165,15 +165,21 @@ export default function App() {
       return;
     }
 
+    const hamTuketimRaw = sonEndeks - ilkEndeks;
     const computedOfid = kcal > 0 ? kcal / 860.42 : 0;
-    const computedTuketimSm3 = ((sonEndeks - ilkEndeks) * duzeltme * kcal) / 9155;
+    const okumaGunu = tarihFark(ilkTarih, sonTarih) + 1;
+
+    // Total standardized volume (Sm3) - Using 9155 as base kcal for Sm3 conversion
+    const computedTuketimSm3 = (hamTuketimRaw * duzeltme * kcal) / 9155;
+    
+    // Total Energy (kWh)
+    const totalEnergykWh = (hamTuketimRaw * duzeltme) * computedOfid;
     
     setOfid(Number(computedOfid.toFixed(4)));
     setTuketimSm3(Number(computedTuketimSm3.toFixed(2)));
 
-    const hamTuketim = sonEndeks - ilkEndeks;
-    const okumaGunu = tarihFark(ilkTarih, sonTarih) + 1;
     const gunlukSm3 = computedTuketimSm3 / okumaGunu;
+    const gunlukEnergykWh = totalEnergykWh / okumaGunu;
 
     const ilkYil = ilkD.getFullYear();
     const ilkAyIndex = ilkD.getMonth();
@@ -201,8 +207,11 @@ export default function App() {
       k2: number
     ): PeriodData => {
       const isK1 = gunlukSm3 <= limit;
-      const energy = (computedTuketimSm3 * computedOfid * days) / okumaGunu;
+      
+      // The fundamental calculation requested: ((Indices Difference * K) * OFID / Total Days) * Period Days
       const pTuketimSm3 = (computedTuketimSm3 * days) / okumaGunu;
+      const energy = (totalEnergykWh * days) / okumaGunu;
+      
       const pGunlukOrtalama = days > 0 ? pTuketimSm3 / days : 0;
       const pToplamLimitSm3 = limit * days;
       const price = isK1 ? k1 : k2;
@@ -223,7 +232,7 @@ export default function App() {
         duzeltme: duzeltme,
         fiyat: price,
         tutar: amount,
-        formula: `(${computedTuketimSm3.toFixed(2)} × ${days} / ${okumaGunu}) × ${price}`
+        formula: `(((${sonEndeks} - ${ilkEndeks}) × ${duzeltme}) × ${computedOfid.toFixed(4)}) / ${okumaGunu} × ${days} gün`
       };
     };
 
@@ -240,7 +249,7 @@ export default function App() {
     const toplamOdeme = toplamKdvsiz + kdv + yuvarlama + gecikme;
 
     setResults({
-      hamTuketim,
+      hamTuketim: hamTuketimRaw,
       okumaGunu,
       gunlukSm3,
       period1,
