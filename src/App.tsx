@@ -801,7 +801,7 @@ function PeriodCard({ period, index }: { period: PeriodData, index: number }) {
       ["TÜKETİM MİKTARI", period.tuketimSm3, "SM3"],
       ["BOTAŞ TÜKETİM LİMİTİ", period.toplamLimitSm3, `SM3 (${period.gunSayisi} GÜN)`],
       ["TÜKETİM ENERJİ MİKTARI", period.enerjiKwh, "KWH"],
-      [`BİRİM SATIŞ FIYATI (${isK1 ? 'K1' : 'K2'})`, period.fiyat, "TL/KWH"],
+      [`SATIŞ FİYATI (${isK1 ? 'K1' : 'K2'})`, period.fiyat, "TL/SM3"],
       ["DÖNEM TÜKETİM BEDELİ", period.tutar, "TL"],
       ["", "", ""],
       ["HESAPLAMA FORMÜLÜ", period.formula, ""]
@@ -846,7 +846,7 @@ function PeriodCard({ period, index }: { period: PeriodData, index: number }) {
         <DetailRow label="TÜKETİM MİKTARI (SM3)" value={fmt(period.tuketimSm3)} />
         <DetailRow label={`BOTAŞ TÜKETİM LİMİTİ (SM3) (${period.gunSayisi} GÜN)`} value={fmt(period.toplamLimitSm3)} />
         <DetailRow label="TÜKETİM ENERJİ MİKTARI (KWH)" value={fmt(period.enerjiKwh)} />
-        <DetailRow label={`ORT. PER. SATIŞ FIY. (TL/KWH) / ${isK1 ? 'K1' : 'K2'}`} value={fmt(period.fiyat, 8)} />
+        <DetailRow label={`SATIŞ FİYATI (TL/SM3) / ${isK1 ? 'K1' : 'K2'}`} value={fmt(period.fiyat, 8)} />
         <DetailRow label="DÖNEM TÜKETİM BEDELİ (TL)" value={`₺${fmt(period.tutar)}`} isTotal />
       </div>
 
